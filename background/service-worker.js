@@ -1,6 +1,6 @@
 import { generateKeywords, getFallbackKeywords } from "../utils/keywords.js";
 import { executeReuseTabs } from "../utils/search.js";
-import { get, getApiKey, getDelay, getModelName, getKeywordCount, getWordLengths } from "../utils/storage.js";
+import { get, getApiKey, getDelay, getModelName, getKeywordCount, getWordLengths, getMaxTokens } from "../utils/storage.js";
 
 let searchAborted = false;
 
@@ -31,7 +31,8 @@ async function handleGenerate(popupCount, popupWordLengths, sendResponse) {
     const wordLengths = (popupWordLengths && popupWordLengths.length > 0)
       ? popupWordLengths
       : await getWordLengths();
-    console.log("[sw] handleGenerate: final count=", count, "wordLengths=", wordLengths, "model=", modelName);
+    const maxTokens = await getMaxTokens();
+    console.log("[sw] handleGenerate: final count=", count, "wordLengths=", wordLengths, "model=", modelName, "maxTokens=", maxTokens);
 
     if (!apiKey) {
       const kw = getFallbackKeywords(count, wordLengths);
@@ -39,7 +40,7 @@ async function handleGenerate(popupCount, popupWordLengths, sendResponse) {
       sendResponse({ keywords: kw });
       return;
     }
-    const keywords = await generateKeywords(apiKey, modelName, count, wordLengths);
+    const keywords = await generateKeywords(apiKey, modelName, count, wordLengths, maxTokens);
     console.log("[sw] handleGenerate: API returned", keywords.length, "keywords");
     sendResponse({ keywords });
   } catch (e) {

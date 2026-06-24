@@ -7,7 +7,8 @@ const DEFAULTS = {
   keywordCount: 100,
   autoPlay: false,
   watchSeconds: 30,
-  wordLengths: [1,2,3,4,5,6]  // all selected by default (no filter)
+  wordLengths: [1,2,3,4,5,6],  // all selected by default (no filter)
+  maxTokens: 0  // 0 = auto-calculate
 };
 
 export async function get(keys) {
@@ -56,4 +57,9 @@ export async function getKeywordCount() {
 export async function getWordLengths() {
   const result = await chrome.storage.local.get("wordLengths");
   return result.wordLengths || DEFAULTS.wordLengths;
+}
+
+export async function getMaxTokens() {
+  const result = await chrome.storage.local.get("maxTokens");
+  return result.maxTokens || 0;
 }

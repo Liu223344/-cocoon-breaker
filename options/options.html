@@ -34,6 +34,13 @@
         </select>
         <input type="text" id="modelCustom" placeholder="输入模型名" style="display:none; flex:1;">
       </div>
+
+      <label for="maxTokens" style="margin-top: 16px;">Max Tokens</label>
+      <div class="input-row">
+        <input type="number" id="maxTokens" min="0" max="100000" step="1000" value="0" class="count-input" style="width:140px;">
+        <span class="hint" style="margin-left:8px;">0 = 自动计算（推荐）</span>
+      </div>
+      <p class="hint">推理模型（v4/reasoner）建议 ≥ 8000，普通模型 2000–4000 即可。设为 0 会根据模型自动适配。</p>
     </section>
 
     <section class="card">

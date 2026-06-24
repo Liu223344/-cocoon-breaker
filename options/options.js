@@ -16,11 +16,12 @@ const autoPlayToggle = document.getElementById("autoPlayToggle");
 const watchSettings = document.getElementById("watchSettings");
 const watchSeconds = document.getElementById("watchSeconds");
 const watchValue = document.getElementById("watchValue");
+const maxTokensInput = document.getElementById("maxTokens");
 const saveBtn = document.getElementById("saveBtn");
 const toast = document.getElementById("toast");
 
 async function init() {
-  const data = await get(["apiKey", "defaultPlatforms", "searchDelayMs", "modelName", "keywordCount", "autoPlay", "watchSeconds", "wordLengths"]);
+  const data = await get(["apiKey", "defaultPlatforms", "searchDelayMs", "modelName", "keywordCount", "autoPlay", "watchSeconds", "wordLengths", "maxTokens"]);
 
   apiKeyInput.value = data.apiKey || "";
   updateKeyStatus();
@@ -50,6 +51,9 @@ async function init() {
 
   // Keyword count
   countCustom.value = data.keywordCount || 100;
+
+  // Max tokens
+  maxTokensInput.value = data.maxTokens || 0;
 
   // Word lengths
   const lengths = data.wordLengths || [1,2,3,4,5,6];
@@ -142,7 +146,8 @@ saveBtn.addEventListener("click", async () => {
     keywordCount: getKeywordCount(),
     autoPlay: autoPlayToggle.checked,
     watchSeconds: parseInt(watchSeconds.value),
-    wordLengths: [...document.querySelectorAll(".length-check input:checked")].map(cb => parseInt(cb.value))
+    wordLengths: [...document.querySelectorAll(".length-check input:checked")].map(cb => parseInt(cb.value)),
+    maxTokens: parseInt(maxTokensInput.value) || 0
   });
   showToast("设置已保存");
 });

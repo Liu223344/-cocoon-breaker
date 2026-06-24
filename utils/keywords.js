@@ -151,12 +151,18 @@ function parseKeywords(rawText, maxCount, wordLengths) {
   return result;
 }
 
-export async function generateKeywords(apiKey, modelName = "deepseek-chat", count = 100, wordLengths = null) {
-  console.log("[keywords] generateKeywords: count=", count, "wordLengths=", wordLengths, "model=", modelName);
+export async function generateKeywords(apiKey, modelName = "deepseek-chat", count = 100, wordLengths = null, maxTokensOverride = 0) {
+  console.log("[keywords] generateKeywords: count=", count, "wordLengths=", wordLengths, "model=", modelName, "maxTokensOverride=", maxTokensOverride);
   if (!apiKey) {
     console.log("[keywords] generateKeywords: no API key, using fallback");
     return getFallbackKeywords(count, wordLengths);
   }
+
+  const isReasoningModel = /reasoner|v4|r1/i.test(modelName);
+  const maxTokens = maxTokensOverride > 0
+    ? maxTokensOverride
+    : (isReasoningModel ? Math.max(count * 200, 8000) : Math.max(count * 40, 2000));
+  console.log("[keywords] isReasoningModel=", isReasoningModel, "maxTokens=", maxTokens);
 
   const response = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
@@ -164,12 +170,6 @@ export async function generateKeywords(apiKey, modelName = "deepseek-chat", coun
       "Content-Type": "application/json",
       "Authorization": `Bearer ${apiKey}`
     },
-    const isReasoningModel = /reasoner|v4|r1/i.test(modelName);
-    const maxTokens = isReasoningModel
-      ? Math.max(count * 200, 8000)
-      : Math.max(count * 40, 2000);
-    console.log("[keywords] isReasoningModel=", isReasoningModel, "maxTokens=", maxTokens);
-
     body: JSON.stringify({
       model: modelName,
       messages: [{ role: "user", content: buildPrompt(count, wordLengths) }],
