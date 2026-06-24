@@ -135,39 +135,35 @@ generateBtn.addEventListener("click", async () => {
   generateBtn.textContent = "生成中...";
 
   const count = getPopupCount();
-  set({ keywordCount: count }); // persist for settings page
+  const data = await get(["wordLengths"]);
+  const wordLengths = data.wordLengths || [1,2,3,4,5,6];
+  await set({ keywordCount: count, wordLengths });
 
   try {
     const apiKey = await getApiKey();
 
     if (!apiKey) {
-      const data = await get(["wordLengths"]);
-      const wordLengths = data.wordLengths || [1,2,3,4,5,6];
       const { getFallbackKeywords } = await import(chrome.runtime.getURL("utils/keywords.js"));
       state.keywords = getFallbackKeywords(count, wordLengths);
       keywordTextarea.value = state.keywords.join("\n");
-      set({ lastKeywords: state.keywords });
+      await set({ lastKeywords: state.keywords });
       updateStatus();
       showMessage(`未配置 API Key，已使用内置关键词列表（${state.keywords.length} 个）`, "info");
     } else {
-      const response = await chrome.runtime.sendMessage({ action: "generateKeywords", count });
-      if (response.error) {
-        throw new Error(response.error);
-      }
+      const response = await chrome.runtime.sendMessage({ action: "generateKeywords", count, wordLengths });
+      if (response.error) throw new Error(response.error);
       state.keywords = response.keywords;
       keywordTextarea.value = state.keywords.join("\n");
-      set({ lastKeywords: state.keywords });
+      await set({ lastKeywords: state.keywords });
       updateStatus();
       showMessage(`成功生成 ${state.keywords.length} 个关键词`, "success");
     }
   } catch (e) {
     showMessage(e.message || "生成失败", "error");
-    const data = await get(["wordLengths"]);
-    const wordLengths = data.wordLengths || [1,2,3,4,5,6];
     const { getFallbackKeywords } = await import(chrome.runtime.getURL("utils/keywords.js"));
     state.keywords = getFallbackKeywords(count, wordLengths);
     keywordTextarea.value = state.keywords.join("\n");
-    set({ lastKeywords: state.keywords });
+    await set({ lastKeywords: state.keywords });
     updateStatus();
   }
 

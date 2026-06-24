@@ -6,7 +6,7 @@ let searchAborted = false;
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "generateKeywords") {
-    handleGenerate(msg.count, sendResponse);
+    handleGenerate(msg.count, msg.wordLengths, sendResponse);
     return true; // async
   }
 
@@ -22,12 +22,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
-async function handleGenerate(popupCount, sendResponse) {
+async function handleGenerate(popupCount, popupWordLengths, sendResponse) {
   try {
     const apiKey = await getApiKey();
     const modelName = await getModelName();
     const count = popupCount || await getKeywordCount();
-    const wordLengths = await getWordLengths();
+    const wordLengths = (popupWordLengths && popupWordLengths.length > 0)
+      ? popupWordLengths
+      : await getWordLengths();
 
     if (!apiKey) {
       sendResponse({ keywords: getFallbackKeywords(count, wordLengths) });
@@ -36,8 +38,10 @@ async function handleGenerate(popupCount, sendResponse) {
     const keywords = await generateKeywords(apiKey, modelName, count, wordLengths);
     sendResponse({ keywords });
   } catch (e) {
-    const count = await getKeywordCount();
-    const wordLengths = await getWordLengths();
+    const count = popupCount || await getKeywordCount();
+    const wordLengths = (popupWordLengths && popupWordLengths.length > 0)
+      ? popupWordLengths
+      : await getWordLengths();
     sendResponse({ error: e.message, keywords: getFallbackKeywords(count, wordLengths) });
   }
 }
