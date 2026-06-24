@@ -1,5 +1,5 @@
 import { generateKeywords, getFallbackKeywords } from "../utils/keywords.js";
-import { executeReuseTabs } from "../utils/search.js";
+import { executeSearch } from "../utils/search.js";
 import { get, getApiKey, getDelay, getModelName, getKeywordCount, getWordLengths, getMaxTokens } from "../utils/storage.js";
 
 let searchAborted = false;
@@ -62,7 +62,7 @@ async function handleSearch(keywords, platforms, sendResponse) {
   const autoPlay = data.autoPlay || false;
   const watchSeconds = data.watchSeconds || 30;
 
-  const results = await executeReuseTabs(keywords, platforms, delayMs, (progress) => {
+  const results = await executeSearch(keywords, platforms, delayMs, (progress) => {
     if (searchAborted) return;
     chrome.runtime.sendMessage({
       action: "searchProgress",

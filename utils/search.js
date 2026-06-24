@@ -45,7 +45,7 @@ async function extractFirstResultUrl(tabId) {
   }
 }
 
-export async function executeReuseTabs(keywords, platformIds, delayMs, onProgress, autoPlay = false, watchSeconds = 30) {
+export async function executeSearch(keywords, platformIds, delayMs, onProgress, autoPlay = false, watchSeconds = 30) {
   const shuffledKw = shuffle([...keywords]);
 
   const pairs = [];
@@ -57,37 +57,30 @@ export async function executeReuseTabs(keywords, platformIds, delayMs, onProgres
   const shuffled = shuffle(pairs);
   const total = shuffled.length;
   const results = { opened: 0, failed: 0, total };
-  let tabId = null;
 
   for (let i = 0; i < shuffled.length; i++) {
     const item = shuffled[i];
 
-    // Close previous tab
-    if (tabId !== null) {
-      try { await chrome.tabs.remove(tabId); } catch { /* already closed */ }
-      tabId = null;
-      await sleep(300);
-    }
-
-    // Open search page (bring to front in auto-play mode so video can play)
     try {
       const tab = await chrome.tabs.create({ url: item.url, active: autoPlay });
-      tabId = tab.id;
       results.opened++;
+
+      if (autoPlay) {
+        await sleep(6000);
+        const videoUrl = await extractFirstResultUrl(tab.id);
+        if (videoUrl) {
+          await chrome.tabs.update(tab.id, { url: videoUrl });
+        }
+        await sleep(watchSeconds * 1000);
+        // keep tab open for user to watch later
+      }
     } catch {
       results.failed++;
     }
 
     onProgress?.({ current: i + 1, total, keyword: item.keyword, platform: item.platform });
 
-    if (autoPlay && tabId) {
-      await sleep(6000);                              // wait for results to render
-      const videoUrl = await extractFirstResultUrl(tabId);
-      if (videoUrl) {
-        await chrome.tabs.update(tabId, { url: videoUrl });  // navigate to video
-      }
-      await sleep(watchSeconds * 1000);               // watch
-    } else if (i < shuffled.length - 1) {
+    if (!autoPlay && i < shuffled.length - 1) {
       await sleep(delayMs);
     }
   }
