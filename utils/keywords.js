@@ -124,9 +124,9 @@ function parseKeywords(rawText, maxCount, wordLengths) {
     .split("\n")
     .map(line => line.trim())
     .filter(line => line.length > 0)
-    // Extract keyword from "词(标签)" format; keep plain lines as-is
+    // Extract keyword from "词(标签)" or "词（标签）" format; keep plain lines as-is
     .map(line => {
-      const match = line.match(/^(.+?)\([^)]+\)$/);
+      const match = line.match(/^(.+?)[(（][^)）]+[)）]$/);
       return match ? match[1].trim() : line;
     })
     .filter(line => {
