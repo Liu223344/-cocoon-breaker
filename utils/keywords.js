@@ -76,9 +76,12 @@ const FALLBACK_KEYWORDS = [
 ];
 
 function buildPrompt(count, wordLengths) {
-  const lenDesc = (wordLengths && wordLengths.length < 6)
+  const hasLenFilter = wordLengths && wordLengths.length < 6;
+  const lenDesc = hasLenFilter
     ? `只允许${wordLengths.join('、')}个字的关键词，其他字数的不要` : '';
-  return `请随机生成${count}个搜索关键词。
+  // Request more when length filter is active (some will be filtered out)
+  const requestCount = hasLenFilter ? count * 3 : count;
+  return `请随机生成${requestCount}个搜索关键词。
 
 要求：
 1. ${lenDesc || '关键词长度在1-10个汉字之间，长短随机变化，不要全部一样长'}
@@ -150,12 +153,6 @@ export async function generateKeywords(apiKey, modelName = "deepseek-chat", coun
   }
 
   const keywords = parseKeywords(rawText, count, wordLengths);
-
-  const minRequired = Math.min(count, 5);
-  if (keywords.length < minRequired) {
-    throw new Error(`仅生成了${keywords.length}个关键词，数量不足，至少需要${minRequired}个`);
-  }
-
   return keywords;
 }
 
