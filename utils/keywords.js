@@ -188,10 +188,14 @@ export async function generateKeywords(apiKey, modelName = "deepseek-chat", coun
   }
 
   const data = await response.json();
+  console.log("[keywords] API response:", JSON.stringify(data).slice(0, 500));
   const rawText = data.choices?.[0]?.message?.content;
 
   if (!rawText) {
-    throw new Error("API返回了空内容");
+    const finish = data.choices?.[0]?.finish_reason;
+    console.error("[keywords] Empty content. finish_reason=", finish, "full response:", JSON.stringify(data));
+    if (finish === "content_filter") throw new Error("内容被安全过滤，请重试");
+    throw new Error(`API返回了空内容 (finish_reason: ${finish || "未知"})`);
   }
 
   const keywords = parseKeywords(rawText, count, wordLengths);
