@@ -23,7 +23,7 @@ const toast = document.getElementById("toast");
 let selectedCount = 100;
 
 async function init() {
-  const data = await get(["apiKey", "defaultPlatforms", "searchDelayMs", "modelName", "keywordCount", "autoPlay", "watchSeconds"]);
+  const data = await get(["apiKey", "defaultPlatforms", "searchDelayMs", "modelName", "keywordCount", "autoPlay", "watchSeconds", "wordLengths"]);
 
   apiKeyInput.value = data.apiKey || "";
   updateKeyStatus();
@@ -54,6 +54,12 @@ async function init() {
   // Keyword count
   selectedCount = data.keywordCount || 100;
   updateCountUI();
+
+  // Word lengths
+  const lengths = data.wordLengths || [1,2,3,4,5,6];
+  document.querySelectorAll(".length-check input").forEach(cb => {
+    cb.checked = lengths.includes(parseInt(cb.value));
+  });
 }
 
 function updateKeyStatus() {
@@ -163,7 +169,8 @@ saveBtn.addEventListener("click", async () => {
     searchDelayMs: parseInt(delayRange.value),
     keywordCount: getKeywordCount(),
     autoPlay: autoPlayToggle.checked,
-    watchSeconds: parseInt(watchSeconds.value)
+    watchSeconds: parseInt(watchSeconds.value),
+    wordLengths: [...document.querySelectorAll(".length-check input:checked")].map(cb => parseInt(cb.value))
   });
   showToast("设置已保存");
 });

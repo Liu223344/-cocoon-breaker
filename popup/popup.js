@@ -133,10 +133,11 @@ generateBtn.addEventListener("click", async () => {
 
     if (!apiKey) {
       // Use fallback
-      const data = await get(["keywordCount"]);
+      const data = await get(["keywordCount", "wordLengths"]);
       const count = data.keywordCount || 100;
+      const wordLengths = data.wordLengths || [1,2,3,4,5,6];
       const { getFallbackKeywords } = await import(chrome.runtime.getURL("utils/keywords.js"));
-      state.keywords = getFallbackKeywords(count);
+      state.keywords = getFallbackKeywords(count, wordLengths);
       keywordTextarea.value = state.keywords.join("\n");
       set({ lastKeywords: state.keywords });
       updateStatus();
@@ -155,10 +156,11 @@ generateBtn.addEventListener("click", async () => {
     }
   } catch (e) {
     showMessage(e.message || "生成失败", "error");
-    const data = await get(["keywordCount"]);
+    const data = await get(["keywordCount", "wordLengths"]);
     const count = data.keywordCount || 100;
+    const wordLengths = data.wordLengths || [1,2,3,4,5,6];
     const { getFallbackKeywords } = await import(chrome.runtime.getURL("utils/keywords.js"));
-    state.keywords = getFallbackKeywords(count);
+    state.keywords = getFallbackKeywords(count, wordLengths);
     keywordTextarea.value = state.keywords.join("\n");
     set({ lastKeywords: state.keywords });
     updateStatus();

@@ -69,9 +69,9 @@ export async function executeReuseTabs(keywords, platformIds, delayMs, onProgres
       await sleep(300);
     }
 
-    // Open search page
+    // Open search page (bring to front in auto-play mode so video can play)
     try {
-      const tab = await chrome.tabs.create({ url: item.url, active: false });
+      const tab = await chrome.tabs.create({ url: item.url, active: autoPlay });
       tabId = tab.id;
       results.opened++;
     } catch {

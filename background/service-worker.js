@@ -1,6 +1,6 @@
 import { generateKeywords, getFallbackKeywords } from "../utils/keywords.js";
 import { executeReuseTabs } from "../utils/search.js";
-import { get, getApiKey, getDelay, getModelName, getKeywordCount } from "../utils/storage.js";
+import { get, getApiKey, getDelay, getModelName, getKeywordCount, getWordLengths } from "../utils/storage.js";
 
 let searchAborted = false;
 
@@ -27,16 +27,18 @@ async function handleGenerate(sendResponse) {
     const apiKey = await getApiKey();
     const modelName = await getModelName();
     const count = await getKeywordCount();
+    const wordLengths = await getWordLengths();
 
     if (!apiKey) {
-      sendResponse({ keywords: getFallbackKeywords(count) });
+      sendResponse({ keywords: getFallbackKeywords(count, wordLengths) });
       return;
     }
-    const keywords = await generateKeywords(apiKey, modelName, count);
+    const keywords = await generateKeywords(apiKey, modelName, count, wordLengths);
     sendResponse({ keywords });
   } catch (e) {
     const count = await getKeywordCount();
-    sendResponse({ error: e.message, keywords: getFallbackKeywords(count) });
+    const wordLengths = await getWordLengths();
+    sendResponse({ error: e.message, keywords: getFallbackKeywords(count, wordLengths) });
   }
 }
 

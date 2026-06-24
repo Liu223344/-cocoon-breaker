@@ -241,3 +241,28 @@ input[type="range"] {
   accent-color: #e94560;
   flex: none;
 }
+
+/* Length filter checkboxes */
+.length-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.length-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+.length-check:hover {
+  border-color: #e94560;
+}
+.length-check input[type="checkbox"] {
+  accent-color: #e94560;
+  flex: none;
+}

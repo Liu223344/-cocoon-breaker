@@ -75,7 +75,9 @@ const FALLBACK_KEYWORDS = [
   "语言起源假说", "图腾崇拜研究", "礼物交换理论"
 ];
 
-function buildPrompt(count) {
+function buildPrompt(count, wordLengths) {
+  const lenDesc = (wordLengths && wordLengths.length < 6)
+    ? `只允许${wordLengths.join('、')}个字的关键词，其他字数的不要` : '';
   return `你是一个帮助人们打破信息茧房的助手。请生成${count}个搜索关键词，覆盖以下领域：
 
 自然科学（物理、化学、生物）、历史与考古、哲学与伦理学、艺术（绘画、雕塑、建筑）、音乐理论与流派、体育运动与赛事、世界美食与烹饪、旅行与地理、前沿科技、文学与诗歌、心理学与认知科学、经济学与社会学、建筑与城市规划、天文学与宇宙学、生态与环境科学、语言学与文字、电影理论与流派、工业设计、传统医学与健康、农业与园艺、海洋科学、地质学、宗教与神话、人类学
@@ -84,7 +86,7 @@ function buildPrompt(count) {
 1. 每个领域至少3-5个关键词
 2. 关键词要泛化，是领域的大类或核心概念，不要太具体太细碎
 3. 尽量选择不常见、非主流但有趣的话题，避免大众流行内容
-4. 关键词长度在1-10个汉字之间，刻意让长度随机变化，有长有短，不要全部一样长
+4. ${lenDesc || '关键词长度在1-10个汉字之间，刻意让长度随机变化，有长有短，不要全部一样长'}
 5. 每个关键词单独一行，不要编号，不要分类标题，纯关键词列表
 6. 不要输出任何解释、前言或结语，直接输出关键词列表
 
@@ -100,9 +102,9 @@ function buildPrompt(count) {
 混沌理论`;
 }
 
-function parseKeywords(rawText, maxCount) {
+function parseKeywords(rawText, maxCount, wordLengths) {
   if (!rawText || typeof rawText !== "string") return [];
-  return rawText
+  let lines = rawText
     .split("\n")
     .map(line => line.trim())
     .filter(line => {
@@ -111,13 +113,19 @@ function parseKeywords(rawText, maxCount) {
       if (/^[\d\.\)、\s\-\*#]+/.test(line)) return false;
       return true;
     })
-    .filter((line, i, arr) => arr.indexOf(line) === i)
-    .slice(0, maxCount);
+    .filter((line, i, arr) => arr.indexOf(line) === i);
+
+  // Filter by selected word lengths (if any subset is selected)
+  if (wordLengths && wordLengths.length < 6) {
+    lines = lines.filter(line => wordLengths.includes(line.length));
+  }
+
+  return lines.slice(0, maxCount);
 }
 
-export async function generateKeywords(apiKey, modelName = "deepseek-chat", count = 100) {
+export async function generateKeywords(apiKey, modelName = "deepseek-chat", count = 100, wordLengths = null) {
   if (!apiKey) {
-    return getFallbackKeywords(count);
+    return getFallbackKeywords(count, wordLengths);
   }
 
   const response = await fetch("https://api.deepseek.com/chat/completions", {
@@ -128,7 +136,7 @@ export async function generateKeywords(apiKey, modelName = "deepseek-chat", coun
     },
     body: JSON.stringify({
       model: modelName,
-      messages: [{ role: "user", content: buildPrompt(count) }],
+      messages: [{ role: "user", content: buildPrompt(count, wordLengths) }],
       temperature: 1.5,
       max_tokens: Math.max(count * 30, 2000)
     })
@@ -156,17 +164,22 @@ export async function generateKeywords(apiKey, modelName = "deepseek-chat", coun
     throw new Error("API返回了空内容");
   }
 
-  const keywords = parseKeywords(rawText, count);
+  const keywords = parseKeywords(rawText, count, wordLengths);
 
-  if (keywords.length < 20) {
-    throw new Error(`仅生成了${keywords.length}个关键词，数量不足`);
+  const minRequired = Math.min(count, 5);
+  if (keywords.length < minRequired) {
+    throw new Error(`仅生成了${keywords.length}个关键词，数量不足，至少需要${minRequired}个`);
   }
 
   return keywords;
 }
 
-export function getFallbackKeywords(count = 100) {
-  return shuffleArray([...FALLBACK_KEYWORDS]).slice(0, count);
+export function getFallbackKeywords(count = 100, wordLengths = null) {
+  let pool = [...FALLBACK_KEYWORDS];
+  if (wordLengths && wordLengths.length < 6) {
+    pool = pool.filter(line => wordLengths.includes(line.length));
+  }
+  return shuffleArray(pool).slice(0, count);
 }
 
 function shuffleArray(arr) {

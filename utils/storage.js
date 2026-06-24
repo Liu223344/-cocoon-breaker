@@ -6,7 +6,8 @@ const DEFAULTS = {
   searchDelayMs: 400,
   keywordCount: 100,
   autoPlay: false,
-  watchSeconds: 30
+  watchSeconds: 30,
+  wordLengths: [1,2,3,4,5,6]  // all selected by default (no filter)
 };
 
 export async function get(keys) {
@@ -50,4 +51,9 @@ export async function getModelName() {
 export async function getKeywordCount() {
   const result = await chrome.storage.local.get("keywordCount");
   return result.keywordCount || DEFAULTS.keywordCount;
+}
+
+export async function getWordLengths() {
+  const result = await chrome.storage.local.get("wordLengths");
+  return result.wordLengths || DEFAULTS.wordLengths;
 }
