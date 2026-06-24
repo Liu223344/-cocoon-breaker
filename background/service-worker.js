@@ -23,6 +23,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 async function handleGenerate(popupCount, popupWordLengths, sendResponse) {
+  console.log("[sw] handleGenerate: popupCount=", popupCount, "popupWordLengths=", popupWordLengths);
   try {
     const apiKey = await getApiKey();
     const modelName = await getModelName();
@@ -30,19 +31,25 @@ async function handleGenerate(popupCount, popupWordLengths, sendResponse) {
     const wordLengths = (popupWordLengths && popupWordLengths.length > 0)
       ? popupWordLengths
       : await getWordLengths();
+    console.log("[sw] handleGenerate: final count=", count, "wordLengths=", wordLengths, "model=", modelName);
 
     if (!apiKey) {
-      sendResponse({ keywords: getFallbackKeywords(count, wordLengths) });
+      const kw = getFallbackKeywords(count, wordLengths);
+      console.log("[sw] handleGenerate: no API key, fallback returned", kw.length, "keywords");
+      sendResponse({ keywords: kw });
       return;
     }
     const keywords = await generateKeywords(apiKey, modelName, count, wordLengths);
+    console.log("[sw] handleGenerate: API returned", keywords.length, "keywords");
     sendResponse({ keywords });
   } catch (e) {
+    console.error("[sw] handleGenerate error:", e);
     const count = popupCount || await getKeywordCount();
     const wordLengths = (popupWordLengths && popupWordLengths.length > 0)
       ? popupWordLengths
       : await getWordLengths();
-    sendResponse({ error: e.message, keywords: getFallbackKeywords(count, wordLengths) });
+    const kw = getFallbackKeywords(count, wordLengths);
+    sendResponse({ error: e.message, keywords: kw });
   }
 }
 

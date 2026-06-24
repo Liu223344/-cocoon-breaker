@@ -23,8 +23,23 @@ const messageBar = document.getElementById("messageBar");
 const popupCount = document.getElementById("popupCount");
 
 function getPopupCount() {
-  const v = parseInt(popupCount.value);
-  return (v >= 5 && v <= 200) ? v : 100;
+  const raw = popupCount.value;
+  const v = parseInt(raw);
+  const result = (v >= 5 && v <= 200) ? v : 100;
+  console.log("[popup] getPopupCount: raw=", raw, "parsed=", v, "result=", result);
+  return result;
+}
+
+function getPopupWordLengths() {
+  const checked = document.querySelectorAll(".len-cb input:checked");
+  console.log("[popup] getPopupWordLengths: checked count=", checked.length);
+  if (checked.length === 0 || checked.length === 6) {
+    console.log("[popup] getPopupWordLengths: all or none, returning [1-6]");
+    return [1,2,3,4,5,6];
+  }
+  const result = [...checked].map(cb => parseInt(cb.value));
+  console.log("[popup] getPopupWordLengths: result=", result);
+  return result;
 }
 
 // --- Init ---
@@ -34,6 +49,12 @@ async function init() {
   state.platforms = data.defaultPlatforms || PLATFORMS.map(p => p.id);
   state.delayMs = data.searchDelayMs || 400;
   popupCount.value = data.keywordCount || 100;
+
+  // Restore word length checkboxes
+  const savedLengths = data.wordLengths || [1,2,3,4,5,6];
+  document.querySelectorAll(".len-cb input").forEach(cb => {
+    cb.checked = savedLengths.includes(parseInt(cb.value));
+  });
 
   renderPlatforms();
   renderKeywords();
@@ -135,8 +156,8 @@ generateBtn.addEventListener("click", async () => {
   generateBtn.textContent = "生成中...";
 
   const count = getPopupCount();
-  const data = await get(["wordLengths"]);
-  const wordLengths = data.wordLengths || [1,2,3,4,5,6];
+  const wordLengths = getPopupWordLengths();
+  console.log("[popup] generateBtn: sending message with count=", count, "wordLengths=", wordLengths);
   await set({ keywordCount: count, wordLengths });
 
   try {

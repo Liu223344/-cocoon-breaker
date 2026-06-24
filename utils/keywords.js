@@ -79,8 +79,8 @@ function buildPrompt(count, wordLengths) {
   const hasLenFilter = wordLengths && wordLengths.length < 6;
   const lenDesc = hasLenFilter
     ? `只允许${wordLengths.join('、')}个字的关键词，其他字数的不要` : '';
-  // Request more when length filter is active (some will be filtered out)
   const requestCount = hasLenFilter ? count * 3 : count;
+  console.log("[keywords] buildPrompt: count=", count, "wordLengths=", wordLengths, "hasLenFilter=", hasLenFilter, "requestCount=", requestCount);
   return `请随机生成${requestCount}个搜索关键词。
 
 要求：
@@ -103,16 +103,25 @@ function parseKeywords(rawText, maxCount, wordLengths) {
     })
     .filter((line, i, arr) => arr.indexOf(line) === i);
 
-  // Filter by selected word lengths (if any subset is selected)
+  console.log("[keywords] parseKeywords: after basic filter,", lines.length, "lines. maxCount=", maxCount, "wordLengths=", wordLengths);
+
   if (wordLengths && wordLengths.length < 6) {
+    const before = lines.length;
     lines = lines.filter(line => wordLengths.includes(line.length));
+    console.log("[keywords] parseKeywords: length filter", before, "→", lines.length, "(allowed lengths:", wordLengths, ")");
+    // Log a sample of what was kept and filtered
+    if (lines.length > 0) console.log("[keywords] parseKeywords: sample kept:", lines.slice(0, 5).map(l => l + "(" + l.length + "字)"));
   }
 
-  return lines.slice(0, maxCount);
+  const result = lines.slice(0, maxCount);
+  console.log("[keywords] parseKeywords: final result", result.length, "keywords");
+  return result;
 }
 
 export async function generateKeywords(apiKey, modelName = "deepseek-chat", count = 100, wordLengths = null) {
+  console.log("[keywords] generateKeywords: count=", count, "wordLengths=", wordLengths, "model=", modelName);
   if (!apiKey) {
+    console.log("[keywords] generateKeywords: no API key, using fallback");
     return getFallbackKeywords(count, wordLengths);
   }
 
@@ -157,11 +166,16 @@ export async function generateKeywords(apiKey, modelName = "deepseek-chat", coun
 }
 
 export function getFallbackKeywords(count = 100, wordLengths = null) {
+  console.log("[keywords] getFallbackKeywords: count=", count, "wordLengths=", wordLengths);
   let pool = [...FALLBACK_KEYWORDS];
   if (wordLengths && wordLengths.length < 6) {
+    const before = pool.length;
     pool = pool.filter(line => wordLengths.includes(line.length));
+    console.log("[keywords] getFallbackKeywords: length filter", before, "→", pool.length);
   }
-  return shuffleArray(pool).slice(0, count);
+  const result = shuffleArray(pool).slice(0, count);
+  console.log("[keywords] getFallbackKeywords: returning", result.length, "keywords");
+  return result;
 }
 
 function shuffleArray(arr) {

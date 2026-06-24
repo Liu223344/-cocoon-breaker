@@ -151,6 +151,23 @@ body {
 .count-field:focus {
   border-color: #e94560;
 }
+.count-sep {
+  margin-left: 12px;
+  color: #a0a0a0;
+}
+.len-cb {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+}
+.len-cb input[type="checkbox"] {
+  accent-color: #e94560;
+  width: 13px;
+  height: 13px;
+}
 
 /* Actions */
 .actions {
