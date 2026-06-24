@@ -17,11 +17,28 @@ async function injectAutoClick(tabId) {
   try {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ["utils/content-script.js"]
+      func: () => {
+        const SELECTORS = [
+          'a[href*="//www.bilibili.com/video/"]',
+          '.bili-video-card a', '.bili-video-card__wrap',
+          '.video-list-item a', '.search-video-item a',
+          '.search-result-card a', '.note-item a',
+          '.List-item .ContentItem-title a',
+          '.card-wrap a[href*="weibo.com"]',
+          '#content_left a', '.feed-card a'
+        ];
+        for (const sel of SELECTORS) {
+          try {
+            const el = document.querySelector(sel);
+            if (el && el.href && !el.href.startsWith('javascript:') && el.offsetParent !== null) {
+              el.click();
+              return;
+            }
+          } catch { /* next */ }
+        }
+      }
     });
-  } catch {
-    // ignore errors (e.g. restricted pages like chrome://)
-  }
+  } catch { /* ignore */ }
 }
 
 export async function executeReuseTabs(keywords, platformIds, delayMs, onProgress, autoPlay = false, watchSeconds = 30) {
@@ -45,31 +62,26 @@ export async function executeReuseTabs(keywords, platformIds, delayMs, onProgres
     if (tabId !== null) {
       try { await chrome.tabs.remove(tabId); } catch { /* already closed */ }
       tabId = null;
+      await sleep(200);
     }
-
-    await sleep(150);
 
     // Open new tab
     try {
       const tab = await chrome.tabs.create({ url: item.url, active: false });
       tabId = tab.id;
       results.opened++;
-
-      // Auto-play: wait for page load, inject click script, wait watch time
-      if (autoPlay && tabId) {
-        await sleep(3000); // wait for page to load
-        await injectAutoClick(tabId);
-        await sleep(watchSeconds * 1000); // let user watch
-      }
     } catch {
       results.failed++;
     }
 
     onProgress?.({ current: i + 1, total, keyword: item.keyword, platform: item.platform });
 
-    if (i < shuffled.length - 1) {
-      // In autoPlay mode, the watch time IS the delay. Otherwise use normal delay.
-      await sleep(autoPlay ? 200 : delayMs);
+    if (autoPlay) {
+      await sleep(6000);                          // wait for page to render results
+      await injectAutoClick(tabId);               // click first result
+      await sleep(watchSeconds * 1000);           // watch
+    } else if (i < shuffled.length - 1) {
+      await sleep(delayMs);
     }
   }
 
