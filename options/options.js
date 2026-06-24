@@ -21,7 +21,7 @@ const saveBtn = document.getElementById("saveBtn");
 const toast = document.getElementById("toast");
 
 async function init() {
-  const data = await get(["apiKey", "defaultPlatforms", "searchDelayMs", "modelName", "keywordCount", "autoPlay", "watchSeconds", "wordLengths", "maxTokens"]);
+  const data = await get(["apiKey", "defaultPlatforms", "searchDelayMs", "modelName", "keywordCount", "autoPlay", "watchSeconds", "wordLengths", "maxTokens", "tabMode"]);
 
   apiKeyInput.value = data.apiKey || "";
   updateKeyStatus();
@@ -54,6 +54,11 @@ async function init() {
 
   // Max tokens
   maxTokensInput.value = data.maxTokens || 0;
+
+  // Tab mode
+  const tabMode = data.tabMode || "multi";
+  const radio = document.querySelector(`input[name="tabMode"][value="${tabMode}"]`);
+  if (radio) radio.checked = true;
 
   // Word lengths
   const lengths = data.wordLengths || [1,2,3,4,5,6];
@@ -147,7 +152,8 @@ saveBtn.addEventListener("click", async () => {
     autoPlay: autoPlayToggle.checked,
     watchSeconds: parseInt(watchSeconds.value),
     wordLengths: [...document.querySelectorAll(".length-check input:checked")].map(cb => parseInt(cb.value)),
-    maxTokens: parseInt(maxTokensInput.value) || 0
+    maxTokens: parseInt(maxTokensInput.value) || 0,
+    tabMode: document.querySelector('input[name="tabMode"]:checked')?.value || "multi"
   });
   showToast("设置已保存");
 });

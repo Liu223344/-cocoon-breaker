@@ -57,10 +57,11 @@ async function handleGenerate(popupCount, popupWordLengths, sendResponse) {
 async function handleSearch(keywords, platforms, sendResponse) {
   searchAborted = false;
 
-  const data = await get(["searchDelayMs", "autoPlay", "watchSeconds"]);
+  const data = await get(["searchDelayMs", "autoPlay", "watchSeconds", "tabMode"]);
   const delayMs = data.searchDelayMs || 400;
   const autoPlay = data.autoPlay || false;
   const watchSeconds = data.watchSeconds || 30;
+  const tabMode = data.tabMode || "multi";
 
   const results = await executeSearch(keywords, platforms, delayMs, (progress) => {
     if (searchAborted) return;
@@ -68,7 +69,7 @@ async function handleSearch(keywords, platforms, sendResponse) {
       action: "searchProgress",
       ...progress
     }).catch(() => {});
-  }, autoPlay, watchSeconds);
+  }, autoPlay, watchSeconds, tabMode);
 
   chrome.runtime.sendMessage({ action: "searchComplete" }).catch(() => {});
   sendResponse({ opened: results.opened, failed: results.failed });

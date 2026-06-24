@@ -8,7 +8,8 @@ const DEFAULTS = {
   autoPlay: false,
   watchSeconds: 30,
   wordLengths: [1,2,3,4,5,6],  // all selected by default (no filter)
-  maxTokens: 0  // 0 = auto-calculate
+  maxTokens: 0,  // 0 = auto-calculate
+  tabMode: "multi"  // "multi" = new tab per search, "single" = reuse one tab
 };
 
 export async function get(keys) {

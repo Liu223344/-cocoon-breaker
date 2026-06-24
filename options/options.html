@@ -84,6 +84,12 @@
 
     <section class="card">
       <h2>搜索设置</h2>
+      <label>标签页模式</label>
+      <div class="radio-group" style="margin-bottom:12px;">
+        <label class="radio-row"><input type="radio" name="tabMode" value="multi" checked> 多标签模式 — 每次搜索新建标签页并保留</label>
+        <label class="radio-row"><input type="radio" name="tabMode" value="single"> 单标签模式 — 复用同一个标签页</label>
+      </div>
+
       <label for="delayRange">标签页切换间隔：<span id="delayValue">400</span>ms</label>
       <input type="range" id="delayRange" min="200" max="2000" step="100" value="400">
       <p class="hint">不开启自动播放时生效，控制标签页切换速度</p>

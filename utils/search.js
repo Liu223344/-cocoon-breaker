@@ -45,7 +45,7 @@ async function extractFirstResultUrl(tabId) {
   }
 }
 
-export async function executeSearch(keywords, platformIds, delayMs, onProgress, autoPlay = false, watchSeconds = 30) {
+export async function executeSearch(keywords, platformIds, delayMs, onProgress, autoPlay = false, watchSeconds = 30, tabMode = "multi") {
   const shuffledKw = shuffle([...keywords]);
 
   const pairs = [];
@@ -57,22 +57,31 @@ export async function executeSearch(keywords, platformIds, delayMs, onProgress, 
   const shuffled = shuffle(pairs);
   const total = shuffled.length;
   const results = { opened: 0, failed: 0, total };
+  let tabId = null;
 
   for (let i = 0; i < shuffled.length; i++) {
     const item = shuffled[i];
 
+    // Single-tab mode: close previous tab
+    if (tabMode === "single" && tabId !== null) {
+      try { await chrome.tabs.remove(tabId); } catch { /* already closed */ }
+      tabId = null;
+      await sleep(300);
+    }
+
     try {
       const tab = await chrome.tabs.create({ url: item.url, active: autoPlay });
+      tabId = tab.id;
       results.opened++;
 
       if (autoPlay) {
         await sleep(6000);
-        const videoUrl = await extractFirstResultUrl(tab.id);
+        const videoUrl = await extractFirstResultUrl(tabId);
         if (videoUrl) {
-          await chrome.tabs.update(tab.id, { url: videoUrl });
+          await chrome.tabs.update(tabId, { url: videoUrl });
         }
         await sleep(watchSeconds * 1000);
-        // keep tab open for user to watch later
+        // keep tab open for user to watch later (multi) / will be closed next cycle (single)
       }
     } catch {
       results.failed++;
