@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "信息茧房冲破工具",
+  "version": "1.0.0",
+  "description": "打破算法信息茧房，通过随机关键词搜索多元化内容",
+  "permissions": ["storage", "scripting"],
+  "host_permissions": [
+    "https://api.deepseek.com/*",
+    "https://search.bilibili.com/*",
+    "https://www.douyin.com/*",
+    "https://www.xiaohongshu.com/*",
+    "https://www.zhihu.com/*",
+    "https://s.weibo.com/*",
+    "https://www.baidu.com/*",
+    "https://www.toutiao.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "信息茧房冲破工具"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "options_page": "options/options.html"
+}

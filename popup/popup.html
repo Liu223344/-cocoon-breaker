@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <h1>信息茧房冲破工具</h1>
+      <p class="subtitle">打破算法推荐的信息壁垒</p>
+    </div>
+    <button id="settingsBtn" class="icon-btn" title="设置">&#9881;</button>
+  </div>
+
+  <div id="statusBar" class="status-bar">
+    尚未生成关键词
+  </div>
+
+  <div class="keyword-area">
+    <textarea id="keywordTextarea" placeholder="点击"生成关键词"获取搜索词，或手动输入关键词（每行一个）..."></textarea>
+  </div>
+
+  <div class="platform-section">
+    <div class="platform-header">
+      <span>选择搜索平台：</span>
+      <button id="toggleAllBtn" class="link-btn">全选/取消</button>
+    </div>
+    <div id="platformGrid" class="platform-grid"></div>
+  </div>
+
+  <div class="actions">
+    <button id="generateBtn" class="btn btn-generate">生成关键词</button>
+    <button id="searchBtn" class="btn btn-search" disabled>开始搜索</button>
+  </div>
+
+  <div id="progressBar" class="progress hidden">
+    <span id="progressText"></span>
+    <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+  </div>
+
+  <div id="messageBar" class="message hidden"></div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

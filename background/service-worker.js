@@ -1,0 +1,61 @@
+import { generateKeywords, getFallbackKeywords } from "../utils/keywords.js";
+import { executeReuseTabs } from "../utils/search.js";
+import { get, getApiKey, getDelay, getModelName, getKeywordCount } from "../utils/storage.js";
+
+let searchAborted = false;
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.action === "generateKeywords") {
+    handleGenerate(sendResponse);
+    return true; // async
+  }
+
+  if (msg.action === "startSearch") {
+    handleSearch(msg.keywords, msg.platforms, sendResponse);
+    return true; // async
+  }
+
+  if (msg.action === "stopSearch") {
+    searchAborted = true;
+    sendResponse({ ok: true });
+    return false;
+  }
+});
+
+async function handleGenerate(sendResponse) {
+  try {
+    const apiKey = await getApiKey();
+    const modelName = await getModelName();
+    const count = await getKeywordCount();
+
+    if (!apiKey) {
+      sendResponse({ keywords: getFallbackKeywords(count) });
+      return;
+    }
+    const keywords = await generateKeywords(apiKey, modelName, count);
+    sendResponse({ keywords });
+  } catch (e) {
+    const count = await getKeywordCount();
+    sendResponse({ error: e.message, keywords: getFallbackKeywords(count) });
+  }
+}
+
+async function handleSearch(keywords, platforms, sendResponse) {
+  searchAborted = false;
+
+  const data = await get(["searchDelayMs", "autoPlay", "watchSeconds"]);
+  const delayMs = data.searchDelayMs || 400;
+  const autoPlay = data.autoPlay || false;
+  const watchSeconds = data.watchSeconds || 30;
+
+  const results = await executeReuseTabs(keywords, platforms, delayMs, (progress) => {
+    if (searchAborted) return;
+    chrome.runtime.sendMessage({
+      action: "searchProgress",
+      ...progress
+    }).catch(() => {});
+  }, autoPlay, watchSeconds);
+
+  chrome.runtime.sendMessage({ action: "searchComplete" }).catch(() => {});
+  sendResponse({ opened: results.opened, failed: results.failed });
+}

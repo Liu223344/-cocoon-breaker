@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="options.css">
+  <title>信息茧房冲破工具 - 设置</title>
+</head>
+<body>
+  <div class="container">
+    <h1>设置</h1>
+
+    <section class="card">
+      <h2>API 设置</h2>
+      <label for="apiKey">DeepSeek API 密钥</label>
+      <div class="input-row">
+        <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+        <button id="toggleKeyBtn" class="icon-btn" title="显示/隐藏">👁</button>
+      </div>
+      <p class="hint">
+        获取 API Key：<a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com/api_keys</a>
+      </p>
+      <p id="keyStatus" class="status"></p>
+
+      <label for="modelSelect" style="margin-top: 16px;">模型选择</label>
+      <div class="input-row">
+        <select id="modelSelect">
+          <option value="deepseek-chat">deepseek-chat</option>
+          <option value="deepseek-reasoner">deepseek-reasoner</option>
+          <option value="deepseek-v3-0324">deepseek-v3-0324</option>
+          <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+          <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+          <option value="__custom__">自定义...</option>
+        </select>
+        <input type="text" id="modelCustom" placeholder="输入模型名" style="display:none; flex:1;">
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>关键词生成</h2>
+      <label>每次生成数量</label>
+      <div class="count-presets">
+        <button class="count-btn" data-count="25">25</button>
+        <button class="count-btn" data-count="50">50</button>
+        <button class="count-btn" data-count="100">100</button>
+        <input type="number" id="countCustom" min="5" max="200" placeholder="自定义" class="count-input">
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>默认搜索平台</h2>
+      <div id="platformGrid" class="platform-grid"></div>
+      <div class="row-btns">
+        <button id="selectAllBtn" class="link-btn">全选</button>
+        <button id="deselectAllBtn" class="link-btn">取消全选</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>自动播放</h2>
+      <label class="toggle-row">
+        <input type="checkbox" id="autoPlayToggle">
+        <span>搜索后自动点开第一个结果播放</span>
+      </label>
+      <p class="hint">开启后，每次搜索会自动点击第一个视频/文章，并停留观看一段时间再搜下一个</p>
+      <div id="watchSettings" style="display:none; margin-top:12px;">
+        <label for="watchSeconds">观看时长：<span id="watchValue">30</span> 秒</label>
+        <input type="range" id="watchSeconds" min="10" max="120" step="5" value="30">
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>搜索设置</h2>
+      <label for="delayRange">标签页切换间隔：<span id="delayValue">400</span>ms</label>
+      <input type="range" id="delayRange" min="200" max="2000" step="100" value="400">
+      <p class="hint">不开启自动播放时生效，控制标签页切换速度</p>
+    </section>
+
+    <div class="actions">
+      <button id="saveBtn" class="btn btn-primary">保存设置</button>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="options.js" type="module"></script>
+</body>
+</html>
