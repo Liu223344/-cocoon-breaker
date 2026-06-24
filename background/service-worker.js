@@ -6,7 +6,7 @@ let searchAborted = false;
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "generateKeywords") {
-    handleGenerate(sendResponse);
+    handleGenerate(msg.count, sendResponse);
     return true; // async
   }
 
@@ -22,11 +22,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
-async function handleGenerate(sendResponse) {
+async function handleGenerate(popupCount, sendResponse) {
   try {
     const apiKey = await getApiKey();
     const modelName = await getModelName();
-    const count = await getKeywordCount();
+    const count = popupCount || await getKeywordCount();
     const wordLengths = await getWordLengths();
 
     if (!apiKey) {

@@ -38,13 +38,8 @@
 
     <section class="card">
       <h2>关键词生成</h2>
-      <label>每次生成数量</label>
-      <div class="count-presets">
-        <button class="count-btn" data-count="25">25</button>
-        <button class="count-btn" data-count="50">50</button>
-        <button class="count-btn" data-count="100">100</button>
-        <input type="number" id="countCustom" min="5" max="200" placeholder="自定义" class="count-input">
-      </div>
+      <label for="countCustom">每次生成数量</label>
+      <input type="number" id="countCustom" min="5" max="200" value="100" class="count-input" style="width:120px;">
 
       <label style="margin-top: 16px;">关键词字数过滤</label>
       <div class="length-presets" id="lengthPresets">

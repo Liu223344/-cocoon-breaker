@@ -20,13 +20,20 @@ const progressBar = document.getElementById("progressBar");
 const progressText = document.getElementById("progressText");
 const progressFill = document.getElementById("progressFill");
 const messageBar = document.getElementById("messageBar");
+const popupCount = document.getElementById("popupCount");
+
+function getPopupCount() {
+  const v = parseInt(popupCount.value);
+  return (v >= 5 && v <= 200) ? v : 100;
+}
 
 // --- Init ---
 async function init() {
-  const data = await get(["lastKeywords", "defaultPlatforms", "searchDelayMs"]);
+  const data = await get(["lastKeywords", "defaultPlatforms", "searchDelayMs", "keywordCount", "wordLengths"]);
   state.keywords = data.lastKeywords || [];
   state.platforms = data.defaultPlatforms || PLATFORMS.map(p => p.id);
   state.delayMs = data.searchDelayMs || 400;
+  popupCount.value = data.keywordCount || 100;
 
   renderPlatforms();
   renderKeywords();
@@ -126,15 +133,15 @@ settingsBtn.addEventListener("click", () => {
 generateBtn.addEventListener("click", async () => {
   generateBtn.disabled = true;
   generateBtn.textContent = "生成中...";
-  showMessage("正在调用 DeepSeek API 生成关键词...", "info");
+
+  const count = getPopupCount();
+  set({ keywordCount: count }); // persist for settings page
 
   try {
     const apiKey = await getApiKey();
 
     if (!apiKey) {
-      // Use fallback
-      const data = await get(["keywordCount", "wordLengths"]);
-      const count = data.keywordCount || 100;
+      const data = await get(["wordLengths"]);
       const wordLengths = data.wordLengths || [1,2,3,4,5,6];
       const { getFallbackKeywords } = await import(chrome.runtime.getURL("utils/keywords.js"));
       state.keywords = getFallbackKeywords(count, wordLengths);
@@ -143,8 +150,7 @@ generateBtn.addEventListener("click", async () => {
       updateStatus();
       showMessage(`未配置 API Key，已使用内置关键词列表（${state.keywords.length} 个）`, "info");
     } else {
-      // Call via service worker
-      const response = await chrome.runtime.sendMessage({ action: "generateKeywords" });
+      const response = await chrome.runtime.sendMessage({ action: "generateKeywords", count });
       if (response.error) {
         throw new Error(response.error);
       }
@@ -156,8 +162,7 @@ generateBtn.addEventListener("click", async () => {
     }
   } catch (e) {
     showMessage(e.message || "生成失败", "error");
-    const data = await get(["keywordCount", "wordLengths"]);
-    const count = data.keywordCount || 100;
+    const data = await get(["wordLengths"]);
     const wordLengths = data.wordLengths || [1,2,3,4,5,6];
     const { getFallbackKeywords } = await import(chrome.runtime.getURL("utils/keywords.js"));
     state.keywords = getFallbackKeywords(count, wordLengths);

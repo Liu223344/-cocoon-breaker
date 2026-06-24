@@ -127,6 +127,31 @@ body {
   accent-color: #e94560;
 }
 
+/* Count row */
+.count-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #a0a0a0;
+}
+.count-field {
+  width: 72px;
+  padding: 6px 8px;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  color: #eaeaea;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+}
+.count-field:focus {
+  border-color: #e94560;
+}
+
 /* Actions */
 .actions {
   display: flex;
