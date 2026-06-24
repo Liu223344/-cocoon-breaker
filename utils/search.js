@@ -13,32 +13,36 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function injectAutoClick(tabId) {
+async function extractFirstResultUrl(tabId) {
   try {
-    await chrome.scripting.executeScript({
+    const results = await chrome.scripting.executeScript({
       target: { tabId },
       func: () => {
         const SELECTORS = [
           'a[href*="//www.bilibili.com/video/"]',
-          '.bili-video-card a', '.bili-video-card__wrap',
+          '.bili-video-card a', '.bili-video-card__wrap a',
           '.video-list-item a', '.search-video-item a',
           '.search-result-card a', '.note-item a',
           '.List-item .ContentItem-title a',
           '.card-wrap a[href*="weibo.com"]',
-          '#content_left a', '.feed-card a'
+          '#content_left a[href]',
+          '.feed-card a'
         ];
         for (const sel of SELECTORS) {
           try {
             const el = document.querySelector(sel);
             if (el && el.href && !el.href.startsWith('javascript:') && el.offsetParent !== null) {
-              el.click();
-              return;
+              return el.href;
             }
           } catch { /* next */ }
         }
+        return null;
       }
     });
-  } catch { /* ignore */ }
+    return results[0]?.result || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function executeReuseTabs(keywords, platformIds, delayMs, onProgress, autoPlay = false, watchSeconds = 30) {
@@ -62,10 +66,10 @@ export async function executeReuseTabs(keywords, platformIds, delayMs, onProgres
     if (tabId !== null) {
       try { await chrome.tabs.remove(tabId); } catch { /* already closed */ }
       tabId = null;
-      await sleep(200);
+      await sleep(300);
     }
 
-    // Open new tab
+    // Open search page
     try {
       const tab = await chrome.tabs.create({ url: item.url, active: false });
       tabId = tab.id;
@@ -76,10 +80,13 @@ export async function executeReuseTabs(keywords, platformIds, delayMs, onProgres
 
     onProgress?.({ current: i + 1, total, keyword: item.keyword, platform: item.platform });
 
-    if (autoPlay) {
-      await sleep(6000);                          // wait for page to render results
-      await injectAutoClick(tabId);               // click first result
-      await sleep(watchSeconds * 1000);           // watch
+    if (autoPlay && tabId) {
+      await sleep(6000);                              // wait for results to render
+      const videoUrl = await extractFirstResultUrl(tabId);
+      if (videoUrl) {
+        await chrome.tabs.update(tabId, { url: videoUrl });  // navigate to video
+      }
+      await sleep(watchSeconds * 1000);               // watch
     } else if (i < shuffled.length - 1) {
       await sleep(delayMs);
     }
