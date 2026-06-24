@@ -75,19 +75,47 @@ const FALLBACK_KEYWORDS = [
   "语言起源假说", "图腾崇拜研究", "礼物交换理论"
 ];
 
+function formatLenRequirement(wordLengths) {
+  if (!wordLengths || wordLengths.length >= 6) {
+    return {
+      short: "1-6字",
+      detail: "每个词的长度在1-6个汉字之间，长短随机变化，不要全部一样长"
+    };
+  }
+  const nums = [...wordLengths].sort((a, b) => a - b);
+  if (nums.length === 1) {
+    return { short: `${nums[0]}字`, detail: `每个词必须正好${nums[0]}个汉字` };
+  }
+  const consecutive = nums[nums.length - 1] - nums[0] === nums.length - 1;
+  if (consecutive) {
+    const allButLast = nums.slice(0, -1).join("、");
+    return {
+      short: `${nums[0]}-${nums[nums.length - 1]}字`,
+      detail: `每个词必须正好${allButLast}或${nums[nums.length - 1]}个汉字`
+    };
+  }
+  return {
+    short: `${nums.join("、")}字`,
+    detail: `每个词必须是${nums.join("、")}个汉字之一`
+  };
+}
+
 function buildPrompt(count, wordLengths) {
   const hasLenFilter = wordLengths && wordLengths.length < 6;
-  const lenDesc = hasLenFilter
-    ? `只允许${wordLengths.join('、')}个字的关键词，其他字数的不要` : '';
   const requestCount = hasLenFilter ? count * 3 : count;
+  const { short: lenShort, detail: lenDetail } = formatLenRequirement(wordLengths);
   console.log("[keywords] buildPrompt: count=", count, "wordLengths=", wordLengths, "hasLenFilter=", hasLenFilter, "requestCount=", requestCount);
-  return `请随机生成${requestCount}个搜索关键词。
+  return `请生成${requestCount}个${lenShort}的中文搜索关键词，用于打破信息茧房。要求如下：
 
-要求：
-1. ${lenDesc || '关键词长度在1-10个汉字之间，长短随机变化，不要全部一样长'}
-2. 每个关键词之间没有任何关联，不要属于同一个领域，越随机越零散越好
-3. 每个关键词单独一行，不要编号，不要分类，纯关键词列表
-4. 不要输出任何解释、前言或结语，直接输出关键词列表`;
+${lenDetail}
+
+这${requestCount}个词必须彼此之间没有任何明显的关联——不能同属一个常识类别（比如不能都是动植物，不能都是科技，不能都是情绪词）。
+
+尽可能覆盖人类生活的不同侧面：既要有看得见摸得着的（器物、自然、身体），也要有抽象无形的（观念、规则、感受）。
+
+避开2025-2026年的网络热梗和热搜常客，优先选择那些平时会偶尔听到、但从没深究过的词。
+
+输出格式：每行一个词，在词后面用括号注明它所属的简要标签（标签就是这个词最贴切的一两个字的归类，比如"星象""炊具""契约"等），并确保${requestCount}个标签彼此完全不同。`;
 }
 
 function parseKeywords(rawText, maxCount, wordLengths) {
@@ -95,6 +123,12 @@ function parseKeywords(rawText, maxCount, wordLengths) {
   let lines = rawText
     .split("\n")
     .map(line => line.trim())
+    .filter(line => line.length > 0)
+    // Extract keyword from "词(标签)" format; keep plain lines as-is
+    .map(line => {
+      const match = line.match(/^(.+?)\([^)]+\)$/);
+      return match ? match[1].trim() : line;
+    })
     .filter(line => {
       if (line.length < 1) return false;
       if (line.length > 15) return false;
@@ -109,7 +143,6 @@ function parseKeywords(rawText, maxCount, wordLengths) {
     const before = lines.length;
     lines = lines.filter(line => wordLengths.includes(line.length));
     console.log("[keywords] parseKeywords: length filter", before, "→", lines.length, "(allowed lengths:", wordLengths, ")");
-    // Log a sample of what was kept and filtered
     if (lines.length > 0) console.log("[keywords] parseKeywords: sample kept:", lines.slice(0, 5).map(l => l + "(" + l.length + "字)"));
   }
 
